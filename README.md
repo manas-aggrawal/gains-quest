@@ -58,5 +58,20 @@ CodeMan38, used under the [SIL Open Font License 1.1](https://scripts.sil.org/OF
    Share → **Add to Home Screen**.
 
 After that first load the service worker has cached everything, so it runs with
-no signal. All data stays in that browser's `localStorage` on the device — it is
-never uploaded, and it is not shared between phone and desktop.
+no signal.
+
+## Where your data lives
+
+One `localStorage` key, `gains-quest-v1`, holding the whole state as JSON:
+settings, streak, the week in progress, and every cleared week. Only `done` and
+`note` ever change — day and week completion are recomputed from the ticks
+rather than stored, so the two can't disagree.
+
+Writes happen the instant you tap an exercise; note typing is debounced and
+flushed when the app is backgrounded. On boot the app calls
+`navigator.storage.persist()` to ask the browser to exempt the data from
+automatic eviction (usually granted once installed to the home screen).
+
+It never leaves the device — the host only ever serves the empty app. So there
+is no sync between phone and desktop, and clearing site data for the domain, or
+changing the site's URL, starts you fresh.

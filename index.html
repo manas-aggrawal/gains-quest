@@ -985,6 +985,26 @@ applySettings();
 buildWeek();
 renderHistory();
 
+/**
+ * Ask the browser to exempt our data from automatic eviction.
+ *
+ * Without this, localStorage is "best effort": a browser under storage
+ * pressure is allowed to clear it for sites it deems unimportant. Chrome
+ * generally grants persistence outright once the app is installed to the home
+ * screen. If it declines, nothing breaks — saving works exactly the same, the
+ * data is just theoretically evictable.
+ */
+async function requestPersistence(){
+  try{
+    if(!navigator.storage || !navigator.storage.persist) return;
+    if(await navigator.storage.persisted()) return;   // already granted
+    await navigator.storage.persist();
+  }catch(e){
+    /* Unsupported browser — saving is unaffected. */
+  }
+}
+requestPersistence();
+
 /* Service worker: only registers when served over http(s). Opening the file
    directly still works fully offline — everything is inline. */
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
