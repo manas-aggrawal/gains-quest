@@ -1,77 +1,88 @@
-# GAINS QUEST
+# ASCEND — Training &amp; Fuel
 
-Retro 8-bit workout tracker. One page, no backend, all progress in `localStorage`.
+Offline training log + meal plan. One page, no backend, everything in
+`localStorage`.
 
-**Run it:** open `index.html` in a browser — or, to enable "Add to Home Screen" +
-offline caching, serve the folder: `python3 -m http.server 8000` then visit
-`http://localhost:8000` (use your Mac's LAN IP from your phone).
+**Run it:** open `index.html` in a browser. For home-screen install and offline
+caching, serve the folder — `python3 -m http.server 8000` — or push to `main`,
+which auto-deploys to Netlify.
 
-## How it works
+## Training
 
-- Tap **exercises only**. Days and weeks tick themselves.
-  - All exercises in a day done → **STAGE CLEAR**.
-  - All 4 days done → **WORLD CLEAR!** → tap *Start Next World* to archive the
-    week to history and roll a fresh, fully un-ticked week.
-- Un-ticking anything ripples straight back up — the day and week un-clear.
-- **Streak** = consecutive weeks cleared. A gap of more than 14 days between
-  clears restarts it at 1.
-- The pencil button on each exercise opens an optional **weight × reps** field.
-  It's saved into history with the week, so you can compare week to week.
-- **Sound** and **scanlines** toggle in the header; both persist.
-- Reset controls sit at the bottom in magenta, behind a confirm step.
-  *Reset Current World* keeps history + streak; *Erase All Data* does not.
+- Tap **exercises only**. Days and weeks complete themselves.
+  - All exercises in a day → **STAGE CLEARED**.
+  - All 4 days → **LIMIT BROKEN** → *Begin Next Week* archives the week and
+    starts a fresh one.
+- Un-ticking ripples straight back up — day and week un-clear.
+- **Streak** = consecutive weeks cleared; a gap over 14 days restarts it at 1.
+- **LOG** on each exercise opens an optional weight × reps field, archived with
+  the week so you can compare against last time.
+- Reset controls sit at the bottom behind a confirm. *Reset Current Week* keeps
+  history and streak; *Erase All Data* does not.
 
-## Editing the program
+### Rest timer
 
-The whole routine is the `PROGRAM` array near the top of the `<script>` in
-`index.html` — `[name, 'sets × reps']` pairs. Edit it and reload; ticks and
-notes for exercises whose name still matches are carried over.
+Sticky bar at the bottom of the Training tab: presets (1:00 / 1:30 / 2:00 /
+3:00), ±15s, start/pause/reset, buzz + tone on zero.
 
-## Dropping the notes feature
+Remaining time is derived from an absolute end timestamp, never counted down in
+a variable — phones throttle or freeze timers on a backgrounded tab, so locking
+the screen mid-rest must still show the true time left. Closing the app
+mid-rest and reopening resumes correctly; a rest that expired while the app was
+shut shows `0:00` rather than firing late.
 
-Delete the block between the `---- REMOVE-NOTES` and `---- /REMOVE-NOTES`
-comments in `index.html`, plus the `<button class="note-btn">` line in the same
-row template.
+## Nutrition
+
+Reference plan plus four **protein anchor** checkboxes (one per meal) that feed
+a daily streak. Anchors and the selected lunch reset at midnight; the streak
+walks back through a set of completed dates, so un-ticking is fully reversible.
+
+## Theme
+
+Light coffee base — creams, tans, warm browns — with crimson for power and
+completion, and espresso for text. Sharp angular geometry, no rounded corners.
+Progress bars are **POWER LEVEL** meters. All visuals are original CSS geometry
+and all copy is original to this app; no third-party art, marks, or quotations.
+
+Display face: [Anton](https://fonts.google.com/specimen/Anton) by Vernon Adams /
+Cyreal, under the [SIL Open Font License 1.1](https://scripts.sil.org/OFL),
+embedded as base64. Body text uses the system UI stack.
+
+## Offline
+
+The app makes **zero network requests** — the font is inlined, so there is no
+CDN to fail. The service worker is network-first for the page (2.5s timeout,
+then cache) so deploys land on their own, and cache-first for icons.
+
+## Where your data lives
+
+One `localStorage` key, `gains-quest-v1` — kept from the previous version on
+purpose so existing history survived the redesign. It holds settings, streaks,
+the week in progress, every cleared week, nutrition state and the rest timer.
+
+Only `done` and `note` ever change on an exercise: day and week completion are
+recomputed from the ticks rather than stored, so the two can't disagree. Writes
+happen the instant you tap; note typing is debounced and flushed on background.
+On boot the app calls `navigator.storage.persist()` to ask the browser not to
+evict the data.
+
+It never leaves the device. No sync between phone and desktop, and clearing site
+data for the domain — or changing the site's URL — starts you fresh.
+
+## Editing
+
+- **Program:** the `PROGRAM` array at the top of the `<script>`,
+  `[name, 'sets × reps', 'optional hint']`. Ticks and notes carry across an edit
+  for any exercise whose name still matches.
+- **Meals:** `MEALS` and `LUNCHES` arrays alongside it.
+- **Hype copy:** the `HYPE` array.
+- **Drop the notes feature:** delete the block marked `REMOVE-NOTES`.
 
 ## Files
 
 | File | Purpose |
 | --- | --- |
-| `index.html` | The entire app — HTML, CSS, JS, sound, all inline. |
-| `manifest.json`, `sw.js` | PWA install + offline cache (only used over http). |
+| `index.html` | The entire app — markup, styles, logic, audio, font. |
+| `manifest.json`, `sw.js` | PWA install + offline cache. |
+| `netlify.toml` | Publish dir and cache headers for continuous deploy. |
 | `icon-192.png`, `icon-512.png` | Home-screen icons. |
-
-## Offline
-
-The app makes **zero network requests**. The pixel font is embedded in
-`index.html` as a base64 woff2, so there is no CDN to fail and nothing to warm
-up — it renders identically in airplane mode on a first load.
-
-Font: [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P) by
-CodeMan38, used under the [SIL Open Font License 1.1](https://scripts.sil.org/OFL).
-
-## Installing on a phone
-
-1. Host the folder on any static HTTPS host (Netlify Drop, GitHub Pages, …).
-2. Open the URL once on the phone.
-3. Chrome (Android) offers **Install app**; iOS Safari uses
-   Share → **Add to Home Screen**.
-
-After that first load the service worker has cached everything, so it runs with
-no signal.
-
-## Where your data lives
-
-One `localStorage` key, `gains-quest-v1`, holding the whole state as JSON:
-settings, streak, the week in progress, and every cleared week. Only `done` and
-`note` ever change — day and week completion are recomputed from the ticks
-rather than stored, so the two can't disagree.
-
-Writes happen the instant you tap an exercise; note typing is debounced and
-flushed when the app is backgrounded. On boot the app calls
-`navigator.storage.persist()` to ask the browser to exempt the data from
-automatic eviction (usually granted once installed to the home screen).
-
-It never leaves the device — the host only ever serves the empty app. So there
-is no sync between phone and desktop, and clearing site data for the domain, or
-changing the site's URL, starts you fresh.

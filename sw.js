@@ -10,7 +10,7 @@
  * working uplink would otherwise hang the fetch for ~30s before failing over.
  * We give the network 2.5s, then serve the cached copy regardless.
  */
-const CACHE = 'gains-quest-v2';
+const CACHE = 'ascend-v3';
 const NET_TIMEOUT = 2500;
 
 const ASSETS = [
