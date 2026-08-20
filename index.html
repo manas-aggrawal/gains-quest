@@ -1235,6 +1235,10 @@ function buildNutrition(){
     b.innerHTML = '<div class="dot"><i></i></div><div class="lbl"></div>';
     b.querySelector('.lbl').textContent = m.anchor;
     b.addEventListener('click', () => toggleAnchor(i));
+    // It advertises role="button", so it has to answer to the keyboard too.
+    b.addEventListener('keydown', e => {
+      if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggleAnchor(i); }
+    });
     host.appendChild(b);
     return b;
   });
@@ -1479,7 +1483,10 @@ $('btn-reset-all').addEventListener('click', () =>
         const keep = { sound: state.sound, grain: state.grain, tab: state.tab };
         state = Object.assign(defaultState(), keep);
         save(true);
-        buildWeek(); renderHistory(); buildNutrition(); applySettings();
+        // A running rest timer belongs to the erased state too — stop it and
+        // repaint, or the bar keeps counting against a state that's gone.
+        clearTimeout(restRaf);
+        buildWeek(); renderHistory(); buildNutrition(); applySettings(); paintRest();
       }));
 
 $('btn-next-week').addEventListener('click', startNextWeek);
